@@ -64,7 +64,7 @@ var cpUpload = upload.fields([
   { name: "certificate", maxCount: 1 },
 ]);
 
-router.post("/addEmployement",auth, cpUpload, async (req, res) => {
+router.post("/addEmployement",[auth,userRole], cpUpload, async (req, res) => {
   try {
     /* start validation by joi library */
     const schema = {
@@ -105,6 +105,58 @@ router.post("/addEmployement",auth, cpUpload, async (req, res) => {
         status: true,
         message: "Employment saved",
         employment,
+      });
+    });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+
+router.put("/editEmployement/:id",auth, async (req, res) => {
+  try {
+       /* start validation by joi library */
+       const schema = {
+        name: Joi.string().min(0).required(),
+        email: Joi.string().email({ minDomainAtoms: 2 }).required(),
+        dateOfBirth: Joi.date().required(),
+        qualification: Joi.string().min(0).required(),
+        yearsOfExperience: Joi.string().min(0).required(),
+        courses: Joi.array().min(0).required(),
+      };
+      const result = Joi.validate(req.body, schema);
+      if (result.error) {
+        return res.send({
+          status: false,
+          message: result.error.details[0].message,
+        });
+      }
+    const employement = await  Employement.findByIdAndUpdate(req.params.id,
+      {
+        name: req.body.name,
+        name: req.body.name,
+        email: req.body.email,
+        dateOfBirth: req.body.dateOfBirth,
+        qualification: req.body.qualification,
+        yearsOfExperience: req.body.yearsOfExperience,
+        courses: req.body.courses,
+        cv: req.files["cv"][0].path,
+        certificate: req.files["certificate"][0].path,
+    },
+    {new:true});
+
+    if (!employement) return res.status(404).send("this employement not found");
+    await employement.save((err, employement) => {
+      if (err) {
+        return res.send({
+          status: false,
+          message: err.message,
+        });
+      }
+      return res.send({
+        status: true,
+        message: "Employement Edited",
+        employement
       });
     });
   } catch (error) {

@@ -63,7 +63,7 @@ router.post("/addRegister",auth, async (req, res) => {
 
 /* ------------the route for edit user-------------- */
 
-router.put("/editRegister/:id",[auth,superAdmin], async (req, res) => {
+router.put("/editRegister/:id",auth, async (req, res) => {
   try {
     const register = await  Register.findByIdAndUpdate(req.params.id,
       {

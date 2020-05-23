@@ -28,7 +28,7 @@ router.get("/getSpecificConnect/:id",[auth,superAdmin], async (req, res) => {
 
 /* ------------the route for adding-------------- */
 
-router.post("/addConnect",auth, async (req, res) => {
+router.post("/addConnect",[auth,userRole], async (req, res) => {
   try {
     /* start validation by joi library */
     const schema = {
@@ -63,6 +63,51 @@ router.post("/addConnect",auth, async (req, res) => {
         status: true,
         message: "Connect saved",
         connect,
+      });
+    });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+
+router.put("/editConnect/:id",auth, async (req, res) => {
+  try {
+       /* start validation by joi library */
+       const schema = {
+        name: Joi.string().min(0).required(),
+        email: Joi.string().email({ minDomainAtoms: 2 }).required(),
+        mobile: Joi.string().required(),
+        message: Joi.string().required(),
+      };
+      const result = Joi.validate(req.body, schema);
+      if (result.error) {
+        return res.send({
+          status: false,
+          message: result.error.details[0].message,
+        });
+      }
+    const connect = await  Employement.findByIdAndUpdate(req.params.id,
+      {
+        name: req.body.name,
+        email: req.body.email,
+        mobile: req.body.mobile,
+        message: req.body.message,
+    },
+    {new:true});
+
+    if (!connect) return res.status(404).send("this connect not found");
+    await connect.save((err, connect) => {
+      if (err) {
+        return res.send({
+          status: false,
+          message: err.message,
+        });
+      }
+      return res.send({
+        status: true,
+        message: "Connect Edited",
+        connect
       });
     });
   } catch (error) {
